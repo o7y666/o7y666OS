@@ -79,6 +79,7 @@ next:
 		CMP		CH,CYLS
 		JB		readloop
 ; 跳转到hamster.sys
+		MOV		[0x0ff0],CH
 		JMP		0xc200
 
 error:

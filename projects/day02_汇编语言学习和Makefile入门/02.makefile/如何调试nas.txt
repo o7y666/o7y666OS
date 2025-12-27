@@ -1,0 +1,12 @@
+1.下载最新的qemu
+2.添加到path
+3.在o7yos.img文件夹中的cmd中输入qemu-system-i386 -drive file=o7yos.img,format=raw,if=floppy -s -S
+4.打开新的cmd依次输入：
+（这里要注意不能在qemu中取消暂停，因为要一步步调试，如果取消暂停，程序就直接运行完了）
+target remote localhost:1234
+set architecture i8086
+break *0x7c00
+continue
+5.x/3i $pc
+x=eXamine (检查) /3 =数量 i instruction（指令） $pc =program counter（程序计数器）
+完整含义：显示从当前指令位置开始的3条汇编指令
