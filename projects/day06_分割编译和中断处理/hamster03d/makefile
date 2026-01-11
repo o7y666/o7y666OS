@@ -1,0 +1,83 @@
+TOOLPATH = ../tools/
+INCPATH  = ../tools/haribote/
+
+MAKE     = $(TOOLPATH)make.exe -r
+NASK     = $(TOOLPATH)nask.exe
+EDIMG    = $(TOOLPATH)edimg.exe
+IMGTOL   = $(TOOLPATH)imgtol.com
+GAS2NASK = $(TOOLPATH)gas2nask.exe -a
+BIN2OBJ  = $(TOOLPATH)bin2obj.exe
+OBJ2BIM  = $(TOOLPATH)obj2bim.exe
+MAKEFONT = $(TOOLPATH)makefont.exe
+BIM2HRB  = $(TOOLPATH)bim2hrb.exe
+RULEFILE = $(TOOLPATH)haribote/haribote.rul
+CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
+COPY     = copy
+DEL      = del
+
+default :
+	$(MAKE) img
+#文件生成规则 普通规则
+#启动区内由汇编转换成二进制
+o7yipl.bin : o7yipl.nas makefile
+	$(NASK) o7yipl.nas o7yipl.bin o7yipl.lst
+
+asmhead.bin : asmhead.nas makefile
+	$(NASK) asmhead.nas asmhead.bin asmhead.lst
+
+hankaku.bin : hankaku.txt makefile
+	$(MAKEFONT) hankaku.txt hankaku.bin
+
+hankaku.obj : hankaku.bin makefile
+	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
+
+bootpack.bim : bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
+		bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj
+
+bootpack.hrb : bootpack.bim makefile
+	$(BIM2HRB) bootpack.bim bootpack.hrb 0
+
+hamster.sys : asmhead.bin bootpack.hrb makefile
+	copy /B asmhead.bin+bootpack.hrb hamster.sys
+
+hamster.img : o7yipl.bin hamster.sys makefile
+	$(EDIMG)   imgin:../tools/fdimg0at.tek \
+		wbinimg src:o7yipl.bin len:512 from:0 to:0 \
+		copy from:hamster.sys to:@: \
+		imgout:hamster.img
+
+#一般规则
+
+%.gas : %.c makefile
+	$(CC1) -o $*.gas $*.c
+
+%.nas : %.gas makefile
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas makefile
+	$(NASK) $*.nas $*.obj $*.lst
+
+#命令
+img:
+	$(MAKE) hamster.img
+run:
+	$(MAKE) img
+	$(COPY) hamster.img ..\tools\qemu\fdimage0.bin
+	$(MAKE) -C ../tools/qemu
+install:
+	$(MAKE) img
+	$(IMGTOL) w a: hamster.img
+clean :
+	-$(DEL) *.bin
+	-$(DEL) *.lst
+	-$(DEL) *.obj
+	-$(DEL) bootpack.map
+	-$(DEL) bootpack.bim
+	-$(DEL) bootpack.hrb
+	-$(DEL) hamster.sys
+src_only :
+	../tools/make.exe clean
+	-del hamster.img
+
+
