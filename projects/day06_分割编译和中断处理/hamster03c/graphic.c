@@ -1,4 +1,4 @@
-
+#include "bootpack.h"
 
 void init_palette(void)
 {	

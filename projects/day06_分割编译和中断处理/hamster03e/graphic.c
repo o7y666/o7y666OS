@@ -1,4 +1,4 @@
-
+#include"bootpack.h"
 void init_palette(void)
 {	
 	// 16种颜色，每种颜色三个字节（R,G,B）
